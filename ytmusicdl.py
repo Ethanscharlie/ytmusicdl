@@ -1,20 +1,20 @@
-from pytube import YouTube, Playlist
-import re
-
-import mutagen
-from mutagen.mp3 import MP3
-from mutagen.easyid3 import EasyID3
-from mutagen.id3 import ID3, APIC
-
-import wget
-import moviepy.editor as MP
-from PIL import Image
-import requests
-import time
 import concurrent.futures
-import os
-from termcolor import colored, cprint
 import json
+import os
+import re
+import time
+
+import moviepy.editor as MP
+import mutagen
+import requests
+import wget
+from mutagen.easyid3 import EasyID3
+from mutagen.id3 import APIC, ID3
+from mutagen.mp3 import MP3
+from PIL import Image
+from pytube import Playlist, YouTube
+from termcolor import colored, cprint
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -26,6 +26,7 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
 
 VIDEO_FILE_EXT = "mp4"
 AUDIO_FILE_EXT = "mp3"
@@ -40,6 +41,7 @@ queue = []
 percent = 0
 song_data = {}
 
+
 def downloadVideo(url, directory, index, input_data):
     global counter
     global playlist
@@ -50,7 +52,7 @@ def downloadVideo(url, directory, index, input_data):
     video_title = video.streams.filter(file_extension=VIDEO_FILE_EXT).first().default_filename.split('.')[0]
     print(video_title)
     file = f"{video_title}.{VIDEO_FILE_EXT}"
-    
+
     # Convert to audio
     if re.search(VIDEO_FILE_EXT, file):
         video_path = os.path.join(directory, file)
@@ -65,6 +67,7 @@ def downloadVideo(url, directory, index, input_data):
 
     doMetadata(file, video_title, input_data, index)
 
+
 def setCoverArt(audio_file_location, image_location):
     audio = MP3(audio_file_location, ID3=ID3)
 
@@ -76,7 +79,8 @@ def setCoverArt(audio_file_location, image_location):
     ))
 
     audio.save()
-        
+
+
 def doMetadata(file, video_title, input_data, index):
     global counter
 
@@ -89,7 +93,6 @@ def doMetadata(file, video_title, input_data, index):
             audio.add_tags()
         except:
             print(f"{bcolors.FAIL}There was an metadata error on {video_title}{bcolors.ENDC} -- {file}")
-
             return
 
     audio.delete()
@@ -102,28 +105,46 @@ def doMetadata(file, video_title, input_data, index):
 
     # Cover Art
     img_file = ''
+    target_location = os.path.join(os.path.dirname(file), 'cover.jpg')
 
     if os.path.exists(input_data['cover_art']): img_file = input_data['cover_art']
 
-    try:
-        if requests.get(input_data['cover_art']).status_code: 
-            img_file = wget.download(input_data['cover_art'], os.path.dirname(file))
-            Image.open(img_file).save(os.path.join(os.path.dirname(file), 'cover.jpg'))
-            os.remove(img_file)
-            img_file = os.path.join(os.path.dirname(file), 'cover.jpg')
-    except:
-        print('not web')
-    
+    if os.path.exists(target_location):
+        img_file = target_location
+
+    else:
+        try:
+            if requests.get(input_data['cover_art']).status_code:
+                img_file = wget.download(input_data['cover_art'], os.path.dirname(file))
+                image = Image.open(img_file)
+
+                # Save
+                image.save(target_location)
+                os.remove(img_file)
+
+                img_file = target_location
+
+        except:
+            print('not web')
+
     if img_file: setCoverArt(file, img_file)
-    
+
     # End
     print(input_data['cutoff'])
     print(video_title[int(input_data['cutoff']):])
     print(f"{bcolors.OKBLUE}Finished {audio['title']} | {input_data['album']} | {audio['artist']}{bcolors.ENDC}")
 
     counter += 1
-    percent = (counter/len(playlist)) * 100
+    percent = (counter / len(playlist)) * 100
     print(f"{bcolors.OKCYAN}{counter} / {len(playlist)}{bcolors.ENDC}")
+
+def removeTopicStuff(string):
+    for text in CONFIG['autoremove']:
+        if text in string:
+            string = string.replace(text, "")
+
+    print(string)
+    return string
 
 def downloadPlaylist(input_data):
     global counter
@@ -135,10 +156,18 @@ def downloadPlaylist(input_data):
     main_directory = os.path.join(CONFIG['download_dir'])
     playlist = Playlist(input_data['playlist_url'])
 
+    # Auto-fills the empty inputs
+    for key, value in input_data.items():
+        if value: continue
+        if key == 'album':
+            input_data[key] = removeTopicStuff(playlist.title)
+        elif key == 'artist':
+            input_data[key] = removeTopicStuff(YouTube(playlist[0]).author)
+
     print(input_data)
 
     if input_data['cover_art'] == 'thumb':
-        input_data['cover_art'] = YouTube(playlist[1]).thumbnail_url
+        input_data['cover_art'] = YouTube(playlist[0]).thumbnail_url
 
     # Make new directory or wipe old one
     try:
@@ -162,18 +191,20 @@ def downloadPlaylist(input_data):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             results = []
             for url in playlist:
-                index = str(playlist.index(url)+1)
+                index = str(playlist.index(url) + 1)
                 results.append(executor.submit(downloadVideo, url, download_directory, index, input_data))
 
     else:
         " ---- When you don't want to use threading ---- "
         for url in playlist:
-            index = str(playlist.index(url)+1)
+            index = str(playlist.index(url) + 1)
             downloadVideo(url, download_directory, index, input_data)
 
     end_time = time.perf_counter()
 
-    print(f"{bcolors.OKGREEN}Finished Downloading Content in {round(end_time - start_time)} second(s)! :){bcolors.ENDC}")
+    print(
+        f"{bcolors.OKGREEN}Finished Downloading Content in {round(end_time - start_time)} second(s)! :){bcolors.ENDC}")
+
 
 def getDownloadTitle(url):
     # Make new directory or wipe old one
@@ -192,6 +223,7 @@ def getDownloadTitle(url):
 
     # video = YouTube(url)
     # return video.streams[0].default_filename
+
 
 def testCutoff(playlist_url, cutoff):
     playlist = Playlist(playlist_url)

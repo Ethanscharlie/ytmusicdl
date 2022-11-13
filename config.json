@@ -1,4 +1,15 @@
 {
     "use_threading": true,
-    "download_dir": "~/Music"
+    "download_dir": "/home/ethanscharlie/Music",
+    "default": {
+        "artist": "",
+        "album": "",
+        "url": "",
+        "art": "",
+        "cutoff": 0
+    },
+    "autoremove": [
+        "Album - ",
+         " - Topic"
+    ]
 }

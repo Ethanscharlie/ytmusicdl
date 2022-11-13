@@ -5,6 +5,10 @@ import formlayout as fl
 import json
 import ytmusicdl
 
+config_file = open('config.json')
+CONFIG = json.load(config_file)
+config_file.close()
+
 queue = []
 
 def resToDict(res):
@@ -29,13 +33,13 @@ def testCutoff(result, widgets):
         )
 
 playlistAdd = [
-        ('Playlist url', 'https://www.youtube.com/playlist?list=PL71E19E7A8803384C'),
-        ('Album Title', 'Zelda 1 OST'),
-        ('Artist', 'Nintendo'),
-        ('Cover Art \n(location, url, \nor "thumb"', 'thumb'),
+        ('Playlist url', CONFIG['default']['url']),
+        ('Album Title', CONFIG['default']['album']),
+        ('Artist', CONFIG['default']['artist']),
+        ('Cover Art \n(location, url, \nor "thumb"', CONFIG['default']['art']),
         (None, None),
         ('test', 'To test cutoff here'),
-        ('Cutoff', 34),
+        ('Cutoff', CONFIG['default']['cutoff']),
         (None, [('Test Cutoff', testCutoff)])
         ]
 
@@ -45,7 +49,7 @@ queue.append(resToDict(['Example' for _ in range(10)]))
 
 def addPlaylist(result, widgets): 
     queue.append(resToDict(
-        fedit(playlistAdd, title="YT Music DL: Add Playlist", comment=' '.join(['-' for _ in range(200)]))
+        fedit(playlistAdd, title="YT Music DL: Add Playlist", comment='- ' * 200)
     ))
 
     for widget in widgets:
