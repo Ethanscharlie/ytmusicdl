@@ -41,6 +41,23 @@ queue = []
 percent = 0
 song_data = {}
 
+def createDirs(artist, album):
+    # Make new directory or wipe old one
+    try:
+        os.mkdir(os.path.join(CONFIG['download_dir'], artist))
+    except:
+        print("Artist folder already exists")
+
+    # Make new directory or wipe old one
+    try:
+        os.mkdir(os.path.join(CONFIG['download_dir'], artist, album))
+    except:
+        print("Download folder already exists")
+        # Wipe
+        for i in os.listdir(os.path.join(CONFIG['download_dir'], artist, album)):
+            os.remove(os.path.join(CONFIG['download_dir'], artist, album, i))
+
+    return os.path.join(CONFIG['download_dir'], artist, album)
 
 def downloadVideo(url, directory, index, input_data):
     global counter
@@ -169,22 +186,7 @@ def downloadPlaylist(input_data):
     if input_data['cover_art'] == 'thumb':
         input_data['cover_art'] = YouTube(playlist[0]).thumbnail_url
 
-    # Make new directory or wipe old one
-    try:
-        os.mkdir(os.path.join(main_directory, input_data['artist']))
-    except:
-        print("Artist folder already exists")
-
-    # Make new directory or wipe old one
-    try:
-        os.mkdir(os.path.join(main_directory, input_data['artist'], input_data['album']))
-    except:
-        print("Download folder already exists")
-        # Wipe
-        for i in os.listdir(os.path.join(main_directory, input_data['artist'], input_data['album'])):
-            os.remove(os.path.join(main_directory, input_data['artist'], input_data['album'], i))
-
-    download_directory = os.path.join(main_directory, input_data['artist'], input_data['album'])
+    download_directory = createDirs(input_data['artist'], input_data['album'])
 
     # Download Videos
     if CONFIG['use_threading']:
