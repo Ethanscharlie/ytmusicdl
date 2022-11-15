@@ -41,38 +41,8 @@ queue = []
 percent = 0
 song_data = {}
 
-def autofill(input_data):
-    # Auto-fills the empty inputs
-    for key, value in input_data.items():
-        if value: continue
-        if key == 'album':
-            input_data[key] = removeTopicStuff(playlist.title)
-        elif key == 'artist':
-            input_data[key] = removeTopicStuff(YouTube(playlist[0]).author)
-
-    return input_data
-
-def createDirs(artist, album):
-    # Make new directory or wipe old one
-    try:
-        os.mkdir(os.path.join(CONFIG['download_dir'], artist))
-    except:
-        print("Artist folder already exists")
-
-    # Make new directory or wipe old one
-    try:
-        os.mkdir(os.path.join(CONFIG['download_dir'], artist, album))
-    except:
-        print("Download folder already exists")
-        # Wipe
-        for i in os.listdir(os.path.join(CONFIG['download_dir'], artist, album)):
-            os.remove(os.path.join(CONFIG['download_dir'], artist, album, i))
-
-    return os.path.join(CONFIG['download_dir'], artist, album)
 
 def downloadVideo(url, directory, index, input_data):
-    global counter
-    global playlist
     global percent
 
     video = YouTube(url)
@@ -91,9 +61,7 @@ def downloadVideo(url, directory, index, input_data):
 
         os.remove(video_path)
 
-        file = audio_path
-
-    doMetadata(file, video_title, input_data, index)
+        return audio_path, video_title
 
 
 def setCoverArt(audio_file_location, image_location):
@@ -108,11 +76,38 @@ def setCoverArt(audio_file_location, image_location):
 
     audio.save()
 
+def getCoverArt(input_cover_art, dir):
+    img_file = ''
+    target_location = os.path.join(dir, 'cover.jpg')
+
+    if os.path.exists(input_cover_art):
+        return input_cover_art
+
+    if os.path.exists(target_location):
+        return target_location
+
+    else:
+        try:
+            if requests.get(input_cover_art).status_code:
+                img_file = wget.download(input_cover_art, dir)
+                image = Image.open(img_file)
+
+                # Save
+                image.save(target_location)
+                os.remove(img_file)
+
+                return target_location
+        except:
+            print('not web')
+
+    print(f"{bcolors.FAIL}Image not found :({bcolors.ENDC}")
+    return
+
 
 def doMetadata(file, video_title, input_data, index):
     global counter
 
-    # Metadatafile
+    # Metadata file
     try:
         audio = EasyID3(file)
     except:
@@ -128,34 +123,29 @@ def doMetadata(file, video_title, input_data, index):
     audio["album"] = input_data['album']
     audio['artist'] = input_data['artist']
     audio['tracknumber'] = str(index)
-
     audio.save()
 
-    # Cover Art
-    img_file = ''
-    target_location = os.path.join(os.path.dirname(file), 'cover.jpg')
-
-    if os.path.exists(input_data['cover_art']): img_file = input_data['cover_art']
-
-    if os.path.exists(target_location):
-        img_file = target_location
-
-    else:
-        try:
-            if requests.get(input_data['cover_art']).status_code:
-                img_file = wget.download(input_data['cover_art'], os.path.dirname(file))
-                image = Image.open(img_file)
-
-                # Save
-                image.save(target_location)
-                os.remove(img_file)
-
-                img_file = target_location
-
-        except:
-            print('not web')
-
+    # Cover art
+    img_file = getCoverArt(input_data['cover_art'], os.path.dirname(file))
     if img_file: setCoverArt(file, img_file)
+
+    return audio
+
+
+def removeTopicStuff(string):
+    for text in CONFIG['autoremove']:
+        if text in string:
+            string = string.replace(text, "")
+
+    print(string)
+    return string
+
+
+def doVideo(url, directory, index, input_data):
+    global percent
+
+    file, video_title = downloadVideo(url, directory, index, input_data)
+    audio = doMetadata(file, video_title, input_data, index)
 
     # End
     print(input_data['cutoff'])
@@ -166,14 +156,6 @@ def doMetadata(file, video_title, input_data, index):
     percent = (counter / len(playlist)) * 100
     print(f"{bcolors.OKCYAN}{counter} / {len(playlist)}{bcolors.ENDC}")
 
-def removeTopicStuff(string):
-    for text in CONFIG['autoremove']:
-        if text in string:
-            string = string.replace(text, "")
-
-    print(string)
-    return string
-
 def downloadPlaylist(input_data):
     global counter
     global playlist
@@ -181,30 +163,38 @@ def downloadPlaylist(input_data):
 
     start_time = time.perf_counter()
 
-    try:
-        playlist = Playlist(input_data['playlist_url'])
-    except:
-        try:
-            video = YouTube(input_data['playlist_url'])
-        except:
-            return
-        else:
-            input_type = 'video'
-    else:
-        input_type = 'playlist'
-
     main_directory = os.path.join(CONFIG['download_dir'])
-    
+    playlist = Playlist(input_data['playlist_url'])
 
-    input_data = autofill(input_data)
+    # Autofill the empty inputs
+    for key, value in input_data.items():
+        if value: continue
+        if key == 'album':
+            input_data[key] = removeTopicStuff(playlist.title)
+        elif key == 'artist':
+            input_data[key] = removeTopicStuff(YouTube(playlist[0]).author)
 
     print(input_data)
 
     if input_data['cover_art'] == 'thumb':
-        
         input_data['cover_art'] = YouTube(playlist[0]).thumbnail_url
 
-    download_directory = createDirs(input_data['artist'], input_data['album'])
+    # Make new directory or wipe old one
+    try:
+        os.mkdir(os.path.join(main_directory, input_data['artist']))
+    except:
+        print("Artist folder already exists")
+
+    # Make new directory or wipe old one
+    try:
+        os.mkdir(os.path.join(main_directory, input_data['artist'], input_data['album']))
+    except:
+        print("Download folder already exists")
+        # Wipe
+        for i in os.listdir(os.path.join(main_directory, input_data['artist'], input_data['album'])):
+            os.remove(os.path.join(main_directory, input_data['artist'], input_data['album'], i))
+
+    download_directory = os.path.join(main_directory, input_data['artist'], input_data['album'])
 
     # Download Videos
     if CONFIG['use_threading']:
@@ -212,13 +202,13 @@ def downloadPlaylist(input_data):
             results = []
             for url in playlist:
                 index = str(playlist.index(url) + 1)
-                results.append(executor.submit(downloadVideo, url, download_directory, index, input_data))
+                results.append(executor.submit(doVideo, url, download_directory, index, input_data))
 
     else:
         " ---- When you don't want to use threading ---- "
         for url in playlist:
             index = str(playlist.index(url) + 1)
-            downloadVideo(url, download_directory, index, input_data)
+            doVideo(url, download_directory, index, input_data)
 
     end_time = time.perf_counter()
 
