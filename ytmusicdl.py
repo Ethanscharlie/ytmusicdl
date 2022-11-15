@@ -44,6 +44,7 @@ config_file.close()
 queue = []
 percent = 0
 song_data = {}
+counter = 0
 
 
 def download_video(url: str, directory: str) -> (str, str):
@@ -85,10 +86,10 @@ def set_cover_art(audio_file_location: str, image_location: str):
     audio.save()
 
 
-def get_cover_art(input_cover_art: str, dir: str):
+def get_cover_art(input_cover_art: str, directory: str):
     # Grabs and downloads the cover art after figuring out if it's a location, or a web image
 
-    target_location = os.path.join(dir, 'cover.jpg')
+    target_location = os.path.join(directory, 'cover.jpg')
 
     # Tests for if the image is on the system
     if os.path.exists(input_cover_art):
@@ -102,7 +103,7 @@ def get_cover_art(input_cover_art: str, dir: str):
         try:
             # Downloads the image from the url
             if requests.get(input_cover_art).status_code:
-                img_file = wget.download(input_cover_art, dir)
+                img_file = wget.download(input_cover_art, directory)
                 image = Image.open(img_file)
 
                 # Save
@@ -117,7 +118,7 @@ def get_cover_art(input_cover_art: str, dir: str):
     return
 
 
-def do_metadata(file: str, video_title: str, input_data: dict, index=1):
+def do_metadata(file: str, video_title: str, input_data: dict, index='1'):
     # Sets the metadata (album name, title, art, etc.) for the mp3 file
 
     global counter
@@ -159,9 +160,10 @@ def remove_topic_stuff(string: str) -> str:
     return string
 
 
-def do_video(url: str, directory: str, index: int, input_data: dict):
+def do_video(url: str, directory: str, index: str, input_data: dict):
     # Downloads and then sets the metadata for the video
-
+    
+    global counter
     global percent
 
     file, video_title = download_video(url, directory)
@@ -212,13 +214,13 @@ def autofill_input(input_data: dict) -> dict:
 
 def download_playlist(input_data: dict):
     # Downloads a YouTube playlist as an album
-    #{
-    #    'playlist_url': "",
-    #    'album': "",
-    #    'artist': "",
-    #    'cover_art': "",
-    #    'cutoff': ""
-    #}
+    # {
+    #     'playlist_url': "",
+    #     'album': "",
+    #     'artist': "",
+    #     'cover_art': "",
+    #     'cutoff': ""
+    # }
     # input_data should be a dictionary and look like this
 
     global counter
