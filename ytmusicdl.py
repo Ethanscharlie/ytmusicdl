@@ -1,3 +1,8 @@
+"""
+Written by Ethanscharlie
+https://github.com/Ethanscharlie
+"""
+
 import concurrent.futures
 import json
 import os
@@ -13,8 +18,6 @@ from mutagen.id3 import APIC, ID3
 from mutagen.mp3 import MP3
 from PIL import Image
 from pytube import Playlist, YouTube
-from termcolor import colored, cprint
-
 
 class bcolors:
     HEADER = '\033[95m'
@@ -42,7 +45,9 @@ percent = 0
 song_data = {}
 
 
-def downloadVideo(url, directory, index, input_data):
+def download_video(url, directory):
+    # Downloads the YouTube video using the given link to the given directory
+
     global percent
 
     video = YouTube(url)
@@ -51,7 +56,7 @@ def downloadVideo(url, directory, index, input_data):
     print(video_title)
     file = f"{video_title}.{VIDEO_FILE_EXT}"
 
-    # Convert to audio
+    # Convert video (mp4) to audio (mp3)
     if re.search(VIDEO_FILE_EXT, file):
         video_path = os.path.join(directory, file)
         audio_path = os.path.join(directory, f"{os.path.splitext(file)[0]}.{AUDIO_FILE_EXT}")
@@ -64,7 +69,9 @@ def downloadVideo(url, directory, index, input_data):
         return audio_path, video_title
 
 
-def setCoverArt(audio_file_location, image_location):
+def set_cover_art(audio_file_location, image_location):
+    # Sets the album cover art of the file to the image
+
     audio = MP3(audio_file_location, ID3=ID3)
 
     audio.tags.add(APIC(
@@ -76,18 +83,23 @@ def setCoverArt(audio_file_location, image_location):
 
     audio.save()
 
-def getCoverArt(input_cover_art, dir):
-    img_file = ''
+
+def get_cover_art(input_cover_art, dir):
+    # Grabs and downloads the cover art after figuring out if it's a location, or a web image
+
     target_location = os.path.join(dir, 'cover.jpg')
 
+    # Tests for if the image is on the system
     if os.path.exists(input_cover_art):
         return input_cover_art
 
+    # Tests if the image has already been downloaded onto the system
     if os.path.exists(target_location):
         return target_location
 
     else:
         try:
+            # Downloads the image from the url
             if requests.get(input_cover_art).status_code:
                 img_file = wget.download(input_cover_art, dir)
                 image = Image.open(img_file)
@@ -104,10 +116,12 @@ def getCoverArt(input_cover_art, dir):
     return
 
 
-def doMetadata(file, video_title, input_data, index):
+def do_metadata(file, video_title, input_data, index=1):
+    # Sets the metadata (album name, title, art, etc.) for the mp3 file
+
     global counter
 
-    # Metadata file
+    # Gets the audio in mutagen
     try:
         audio = EasyID3(file)
     except:
@@ -118,6 +132,7 @@ def doMetadata(file, video_title, input_data, index):
             print(f"{bcolors.FAIL}There was an metadata error on {video_title}{bcolors.ENDC} -- {file}")
             return
 
+    # Wipes and then sets each tag to the given input data
     audio.delete()
     audio['title'] = f"{video_title[int(input_data['cutoff']):]}"
     audio["album"] = input_data['album']
@@ -126,13 +141,15 @@ def doMetadata(file, video_title, input_data, index):
     audio.save()
 
     # Cover art
-    img_file = getCoverArt(input_data['cover_art'], os.path.dirname(file))
-    if img_file: setCoverArt(file, img_file)
+    img_file = get_cover_art(input_data['cover_art'], os.path.dirname(file))
+    if img_file: set_cover_art(file, img_file)
 
     return audio
 
 
-def removeTopicStuff(string):
+def remove_topic_stuff(string):
+    # Removes dumb YouTube things in names like - Topic, or Album -
+
     for text in CONFIG['autoremove']:
         if text in string:
             string = string.replace(text, "")
@@ -141,11 +158,13 @@ def removeTopicStuff(string):
     return string
 
 
-def doVideo(url, directory, index, input_data):
+def do_video(url, directory, index, input_data):
+    # Downloads and then sets the metadata for the video
+
     global percent
 
-    file, video_title = downloadVideo(url, directory, index, input_data)
-    audio = doMetadata(file, video_title, input_data, index)
+    file, video_title = download_video(url, directory)
+    audio = do_metadata(file, video_title, input_data, index)
 
     # End
     print(input_data['cutoff'])
@@ -156,45 +175,60 @@ def doVideo(url, directory, index, input_data):
     percent = (counter / len(playlist)) * 100
     print(f"{bcolors.OKCYAN}{counter} / {len(playlist)}{bcolors.ENDC}")
 
-def downloadPlaylist(input_data):
+
+def create_dirs(artist, album):
+    # Creates the directory's for the music files, Folder -> Artist -> Album/Single
+
+    # Make new directory or wipe old one
+    try:
+        os.mkdir(os.path.join(CONFIG['download_dir'], artist))
+    except:
+        print("Artist folder already exists")
+
+    # Make new directory or wipe old one
+    try:
+        os.mkdir(os.path.join(CONFIG['download_dir'], artist, album))
+    except:
+        print("Download folder already exists")
+        # Wipe
+        for i in os.listdir(os.path.join(CONFIG['download_dir'], artist, album)):
+            os.remove(os.path.join(CONFIG['download_dir'], artist, album, i))
+
+    return os.path.join(CONFIG['download_dir'], artist, album)
+
+
+def autofill_input(input_data):
+    # Autofill the possibly empty inputs with data taken from the playlist (Like the playlist name and channel name)
+    for key, value in input_data.items():
+        if value: continue
+        if key == 'album':
+            input_data[key] = remove_topic_stuff(playlist.title)
+        elif key == 'artist':
+            input_data[key] = remove_topic_stuff(YouTube(playlist[0]).author)
+
+    return input_data
+
+
+def download_playlist(input_data):
+    # Downloads a YouTube playlist as an album
+
     global counter
     global playlist
     counter = 0
 
     start_time = time.perf_counter()
 
-    main_directory = os.path.join(CONFIG['download_dir'])
     playlist = Playlist(input_data['playlist_url'])
 
-    # Autofill the empty inputs
-    for key, value in input_data.items():
-        if value: continue
-        if key == 'album':
-            input_data[key] = removeTopicStuff(playlist.title)
-        elif key == 'artist':
-            input_data[key] = removeTopicStuff(YouTube(playlist[0]).author)
-
+    input_data = autofill_input(input_data)
     print(input_data)
 
+    # Gets the url for the YouTube thumbnail (if requested) so it can be downloaded later
     if input_data['cover_art'] == 'thumb':
         input_data['cover_art'] = YouTube(playlist[0]).thumbnail_url
 
-    # Make new directory or wipe old one
-    try:
-        os.mkdir(os.path.join(main_directory, input_data['artist']))
-    except:
-        print("Artist folder already exists")
-
-    # Make new directory or wipe old one
-    try:
-        os.mkdir(os.path.join(main_directory, input_data['artist'], input_data['album']))
-    except:
-        print("Download folder already exists")
-        # Wipe
-        for i in os.listdir(os.path.join(main_directory, input_data['artist'], input_data['album'])):
-            os.remove(os.path.join(main_directory, input_data['artist'], input_data['album'], i))
-
-    download_directory = os.path.join(main_directory, input_data['artist'], input_data['album'])
+    # Make Dirs
+    download_directory = create_dirs(input_data['artist'], input_data['album'])
 
     # Download Videos
     if CONFIG['use_threading']:
@@ -202,13 +236,13 @@ def downloadPlaylist(input_data):
             results = []
             for url in playlist:
                 index = str(playlist.index(url) + 1)
-                results.append(executor.submit(doVideo, url, download_directory, index, input_data))
+                results.append(executor.submit(do_video, url, download_directory, index, input_data))
 
     else:
         " ---- When you don't want to use threading ---- "
         for url in playlist:
             index = str(playlist.index(url) + 1)
-            doVideo(url, download_directory, index, input_data)
+            do_video(url, download_directory, index, input_data)
 
     end_time = time.perf_counter()
 
@@ -216,7 +250,9 @@ def downloadPlaylist(input_data):
         f"{bcolors.OKGREEN}Finished Downloading Content in {round(end_time - start_time)} second(s)! :){bcolors.ENDC}")
 
 
-def getDownloadTitle(url):
+def get_download_title(url):
+    # Gets the title of what a video will be called when it is downloaded
+
     # Make new directory or wipe old one
     try:
         os.mkdir(TEMPDIR)
@@ -231,15 +267,14 @@ def getDownloadTitle(url):
     filtered_video = video.streams.get_audio_only().download(TEMPDIR)
     return video.streams.filter(file_extension=VIDEO_FILE_EXT).first().default_filename.split('.')[0]
 
-    # video = YouTube(url)
-    # return video.streams[0].default_filename
 
+def test_cutoff(playlist_url, cutoff):
+    # Tests the title cutoff
 
-def testCutoff(playlist_url, cutoff):
     playlist = Playlist(playlist_url)
     print(playlist)
 
     videos = (playlist[0], playlist[-1])
-    titles = [getDownloadTitle(v) for v in videos]
+    titles = [get_download_title(v) for v in videos]
 
     return [f'{titles[i]} --> "{titles[i][int(cutoff):]}"' for i, v in enumerate(videos)]
