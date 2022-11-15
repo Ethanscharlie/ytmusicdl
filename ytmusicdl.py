@@ -41,6 +41,17 @@ queue = []
 percent = 0
 song_data = {}
 
+def autofill(input_data):
+    # Auto-fills the empty inputs
+    for key, value in input_data.items():
+        if value: continue
+        if key == 'album':
+            input_data[key] = removeTopicStuff(playlist.title)
+        elif key == 'artist':
+            input_data[key] = removeTopicStuff(YouTube(playlist[0]).author)
+
+    return input_data
+
 def createDirs(artist, album):
     # Make new directory or wipe old one
     try:
@@ -170,20 +181,27 @@ def downloadPlaylist(input_data):
 
     start_time = time.perf_counter()
 
-    main_directory = os.path.join(CONFIG['download_dir'])
-    playlist = Playlist(input_data['playlist_url'])
+    try:
+        playlist = Playlist(input_data['playlist_url'])
+    except:
+        try:
+            video = YouTube(input_data['playlist_url'])
+        except:
+            return
+        else:
+            input_type = 'video'
+    else:
+        input_type = 'playlist'
 
-    # Auto-fills the empty inputs
-    for key, value in input_data.items():
-        if value: continue
-        if key == 'album':
-            input_data[key] = removeTopicStuff(playlist.title)
-        elif key == 'artist':
-            input_data[key] = removeTopicStuff(YouTube(playlist[0]).author)
+    main_directory = os.path.join(CONFIG['download_dir'])
+    
+
+    input_data = autofill(input_data)
 
     print(input_data)
 
     if input_data['cover_art'] == 'thumb':
+        
         input_data['cover_art'] = YouTube(playlist[0]).thumbnail_url
 
     download_directory = createDirs(input_data['artist'], input_data['album'])
