@@ -1,5 +1,26 @@
-# ![Icon](https://github.com/Ethanscharlie/ytmusicdl/edit/main/icon.png) ytmusicdl
+# <img width=50px height=50px src="https://github.com/Ethanscharlie/ytmusicdl/blob/main/icon.png"> ytmusicdl
+
 Takes a youtube playlist and saves it as an album, 
 make sure to set the download_dir in config.json
+```
+{
+  "use_threading": true,
+  "download_dir": "/home/ethanscharlie/Music", <-- THIS
+  "default": {
+      "artist": "",
+      "album": "",
+      "url": "",
+      "art": "",
+      "cutoff": 0
+  },
+  "autoremove": [
+      "Album - ",
+       " - Topic"
+  ]
+}
+```
 
-At the moment you may have to also install qt ***pip install qt*** along with the requriments.txt
+Make sure to also install the requirements.txt
+```
+pip install -r requirements.txt
+```
