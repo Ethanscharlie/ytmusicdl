@@ -24,3 +24,20 @@ Make sure to also install the requirements.txt
 ```
 pip install -r requirements.txt
 ```
+You can use the `main.py` for the graphical version
+<br>
+or just run `download_playlist` from `ytmusicdl.py`
+<br>
+`download_playlist` should be given the following dictionary
+```
+{
+  'playlist_url': "",
+  'album': "",
+  'artist': "",
+  'cover_art': "",
+  'cutoff': ""
+}  
+```
+`cutoff` Just takes a number of characters away from the title of each song
+Good for something like `Me - My Song`
+You'd probably want to remove `Me - ` from the titles
