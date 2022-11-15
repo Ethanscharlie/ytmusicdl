@@ -210,7 +210,15 @@ def autofill_input(input_data):
 
 
 def download_playlist(input_data):
-    # Downloads a YouTube playlist as an album
+    # Downloads a YouTube playlist as an album 
+    #{
+    #    'playlist_url': "",
+    #    'album': "",
+    #    'artist': "",
+    #    'cover_art': "",
+    #    'cutoff': ""
+    #}  
+    # input_data should be a dictionary and look like this
 
     global counter
     global playlist
