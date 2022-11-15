@@ -8,8 +8,7 @@ import json
 import os
 import re
 import time
-
-import moviepy.editor as MP
+import moviepy.editor as mp
 import mutagen
 import requests
 import wget
@@ -63,7 +62,7 @@ def download_video(url: str, directory: str) -> (str, str):
         video_path = os.path.join(directory, file)
         audio_path = os.path.join(directory, f"{os.path.splitext(file)[0]}.{AUDIO_FILE_EXT}")
 
-        new_file = MP.AudioFileClip(video_path)
+        new_file = mp.AudioFileClip(video_path)
         new_file.write_audiofile(audio_path)
 
         os.remove(video_path)
