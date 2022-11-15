@@ -46,7 +46,7 @@ song_data = {}
 counter = 0
 
 
-def download_video(url: str, directory: str) -> (str, str):
+def download_video(url: str, directory: str):
     # Downloads the YouTube video using the given link to the given directory
 
     global percent
@@ -159,7 +159,7 @@ def remove_topic_stuff(string: str) -> str:
     return string
 
 
-def do_video(url: str, directory: str, index: str, input_data: dict):
+def do_video(url: str, directory: str, input_data: dict, index='1'):
     # Downloads and then sets the metadata for the video
     
     global counter
@@ -211,7 +211,28 @@ def autofill_input(input_data: dict) -> dict:
     return input_data
 
 
-def download_playlist(input_data: dict):
+def download_playlist(playlist, input_data: dict, download_directory: str):
+    # Download Videos
+    if CONFIG['use_threading']:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            results = []
+            for url in playlist:
+                index = str(playlist.index(url) + 1)
+                results.append(executor.submit(do_video, url, download_directory, index, input_data))
+
+    else:
+        " ---- When you don't want to use threading ---- "
+        for url in playlist:
+            index = str(playlist.index(url) + 1)
+            do_video(url, download_directory, index, input_data)
+
+
+def download_song(video_url: str, input_data: dict, download_directory: str):
+    # Downloads a single song
+    do_video(video_url, download_directory, input_data)
+
+
+def download_content(input_data: dict):
     # Downloads a YouTube playlist as an album
     # {
     #     'playlist_url': "",
@@ -240,19 +261,8 @@ def download_playlist(input_data: dict):
     # Make Dirs
     download_directory = create_dirs(input_data['artist'], input_data['album'])
 
-    # Download Videos
-    if CONFIG['use_threading']:
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            results = []
-            for url in playlist:
-                index = str(playlist.index(url) + 1)
-                results.append(executor.submit(do_video, url, download_directory, index, input_data))
-
-    else:
-        " ---- When you don't want to use threading ---- "
-        for url in playlist:
-            index = str(playlist.index(url) + 1)
-            do_video(url, download_directory, index, input_data)
+    # Do the thing
+    download_playlist(playlist, input_data, download_directory)
 
     end_time = time.perf_counter()
 
