@@ -1,6 +1,5 @@
 from unittest import registerResult
 from formlayout import fedit
-from formlayout import QLineEdit
 import formlayout as fl
 import json
 import ytmusicdl
@@ -25,7 +24,7 @@ def fancyQueue(): return '\n\n'.join([str(json.dumps(i, indent=4, sort_keys=True
 def testCutoff(result, widgets):
     current = resToDict(result)
     print(current)
-    cuts = [str(s) for s in ytmusicdl.testCutoff(current['playlist_url'], current['cutoff'])]
+    cuts = [str(s) for s in ytmusicdl.test_cutoff(current['playlist_url'], current['cutoff'])]
 
     if isinstance(widgets[5], fl.QLineEdit):
         widgets[5].setText(
@@ -76,5 +75,5 @@ print("result:", res)
 
 while len(queue) > 0:
         if len(queue) > 0:
-            ytmusicdl.downloadPlaylist(queue[0])
+            ytmusicdl.download_playlist(queue[0])
             queue.pop(0)
