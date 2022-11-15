@@ -19,6 +19,7 @@ from mutagen.mp3 import MP3
 from PIL import Image
 from pytube import Playlist, YouTube
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -45,7 +46,7 @@ percent = 0
 song_data = {}
 
 
-def download_video(url, directory):
+def download_video(url: str, directory: str) -> (str, str):
     # Downloads the YouTube video using the given link to the given directory
 
     global percent
@@ -69,7 +70,7 @@ def download_video(url, directory):
         return audio_path, video_title
 
 
-def set_cover_art(audio_file_location, image_location):
+def set_cover_art(audio_file_location: str, image_location: str):
     # Sets the album cover art of the file to the image
 
     audio = MP3(audio_file_location, ID3=ID3)
@@ -84,7 +85,7 @@ def set_cover_art(audio_file_location, image_location):
     audio.save()
 
 
-def get_cover_art(input_cover_art, dir):
+def get_cover_art(input_cover_art: str, dir: str):
     # Grabs and downloads the cover art after figuring out if it's a location, or a web image
 
     target_location = os.path.join(dir, 'cover.jpg')
@@ -116,7 +117,7 @@ def get_cover_art(input_cover_art, dir):
     return
 
 
-def do_metadata(file, video_title, input_data, index=1):
+def do_metadata(file: str, video_title: str, input_data: dict, index=1):
     # Sets the metadata (album name, title, art, etc.) for the mp3 file
 
     global counter
@@ -147,7 +148,7 @@ def do_metadata(file, video_title, input_data, index=1):
     return audio
 
 
-def remove_topic_stuff(string):
+def remove_topic_stuff(string: str) -> str:
     # Removes dumb YouTube things in names like - Topic, or Album -
 
     for text in CONFIG['autoremove']:
@@ -158,7 +159,7 @@ def remove_topic_stuff(string):
     return string
 
 
-def do_video(url, directory, index, input_data):
+def do_video(url: str, directory: str, index: int, input_data: dict):
     # Downloads and then sets the metadata for the video
 
     global percent
@@ -176,7 +177,7 @@ def do_video(url, directory, index, input_data):
     print(f"{bcolors.OKCYAN}{counter} / {len(playlist)}{bcolors.ENDC}")
 
 
-def create_dirs(artist, album):
+def create_dirs(artist: str, album: str) -> str:
     # Creates the directory's for the music files, Folder -> Artist -> Album/Single
 
     # Make new directory or wipe old one
@@ -197,7 +198,7 @@ def create_dirs(artist, album):
     return os.path.join(CONFIG['download_dir'], artist, album)
 
 
-def autofill_input(input_data):
+def autofill_input(input_data: dict) -> dict:
     # Autofill the possibly empty inputs with data taken from the playlist (Like the playlist name and channel name)
     for key, value in input_data.items():
         if value: continue
@@ -209,15 +210,15 @@ def autofill_input(input_data):
     return input_data
 
 
-def download_playlist(input_data):
-    # Downloads a YouTube playlist as an album 
+def download_playlist(input_data: dict):
+    # Downloads a YouTube playlist as an album
     #{
     #    'playlist_url': "",
     #    'album': "",
     #    'artist': "",
     #    'cover_art': "",
     #    'cutoff': ""
-    #}  
+    #}
     # input_data should be a dictionary and look like this
 
     global counter
@@ -258,7 +259,7 @@ def download_playlist(input_data):
         f"{bcolors.OKGREEN}Finished Downloading Content in {round(end_time - start_time)} second(s)! :){bcolors.ENDC}")
 
 
-def get_download_title(url):
+def get_download_title(url: str):
     # Gets the title of what a video will be called when it is downloaded
 
     # Make new directory or wipe old one
@@ -276,7 +277,7 @@ def get_download_title(url):
     return video.streams.filter(file_extension=VIDEO_FILE_EXT).first().default_filename.split('.')[0]
 
 
-def test_cutoff(playlist_url, cutoff):
+def test_cutoff(playlist_url: str, cutoff):
     # Tests the title cutoff
 
     playlist = Playlist(playlist_url)
