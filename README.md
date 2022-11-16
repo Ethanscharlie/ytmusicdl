@@ -16,6 +16,9 @@ or just run `download_playlist` from `ytmusicdl.py`
   'cutoff': ""
 }  
 ```
+You can currently leave `album` and `artist` empty to have them autofill with data taken from the youtube playlist
+<br>
+<br>
 `cutoff` Just takes a number of characters away from the title of each song
 Good for something like `Me - My Song`
 You'd probably want to remove `Me - ` from the titles
