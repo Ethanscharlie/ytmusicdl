@@ -35,6 +35,13 @@ VIDEO_FILE_EXT = "mp4"
 AUDIO_FILE_EXT = "mp3"
 DIRECTORY = os.path.dirname(__file__)
 TEMPDIR = os.path.join(DIRECTORY, 'temp')
+REQUESTED_INPUT_DATA =  {
+         'playlist_url': "",
+         'album': "",
+         'artist': "",
+         'cover_art': "",
+         'cutoff': ""
+    }
 
 config_file = open('config.json')
 CONFIG = json.load(config_file)
@@ -218,13 +225,13 @@ def download_playlist(playlist, input_data: dict, download_directory: str):
             results = []
             for url in playlist:
                 index = str(playlist.index(url) + 1)
-                results.append(executor.submit(do_video, url, download_directory, index, input_data))
+                results.append(executor.submit(do_video, url, download_directory, input_data, index))
 
     else:
         " ---- When you don't want to use threading ---- "
         for url in playlist:
             index = str(playlist.index(url) + 1)
-            do_video(url, download_directory, index, input_data)
+            do_video(url, download_directory, input_data, index)
 
 
 def download_song(video_url: str, input_data: dict, download_directory: str):
