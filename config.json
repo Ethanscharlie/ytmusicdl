@@ -1,6 +1,6 @@
 {
-    "use_threading": true,
-    "download_dir": "/home/ethanscharlie/Music",
+    "use_threading": false,
+    "download_dir": "C:\\Users\\ethan\\Downloads",
     "default": {
         "artist": "",
         "album": "",
