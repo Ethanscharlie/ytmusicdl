@@ -42,15 +42,15 @@ class HBoxLayoutExample(App):
             layout.add_widget(textinput)
             
             if i == 'playlist_url':
-                textinput.bind(focus=self.uid_playlist_url)
+                textinput.bind(text=self.uid_playlist_url)
             elif i == 'album':
-                textinput.bind(focus=self.uid_album)
+                textinput.bind(text=self.uid_album)
             elif i == 'artist':
-                textinput.bind(focus=self.uid_artist)
+                textinput.bind(text=self.uid_artist)
             elif i == 'cover_art':
-                textinput.bind(focus=self.uid_art)
+                textinput.bind(text=self.uid_art)
             elif i == 'cutoff':
-                textinput.bind(focus=self.uid_cutoff)
+                textinput.bind(text=self.uid_cutoff)
             
 
         submit = Button(text='submit')
@@ -59,11 +59,11 @@ class HBoxLayoutExample(App):
 
         return layout
 
-    def uid_playlist_url(self, value): self.update_input_dict('playlist_url', value)
-    def uid_album(self, value): self.update_input_dict('album', value)
-    def uid_artist(self, value): self.update_input_dict('artist', value)
-    def uid_art(self, value): self.update_input_dict('cover_art', value)
-    def uid_cutoff(self, value): self.update_input_dict('cutoff', value)
+    def uid_playlist_url(self, instance, value): self.update_input_dict('playlist_url', value)
+    def uid_album(self, instance, value): self.update_input_dict('album', value)
+    def uid_artist(self, instance, value): self.update_input_dict('artist', value)
+    def uid_art(self, instance, value): self.update_input_dict('cover_art', value)
+    def uid_cutoff(self, instance, value): self.update_input_dict('cutoff', value)
         
     def update_input_dict(self, key, value):
         global input_data
@@ -76,7 +76,7 @@ class HBoxLayoutExample(App):
         print(instance.text)
         print('Sumbit')
         print(input_data)
-        #ytmusicdl.download_content(input_data)
+        ytmusicdl.download_content(input_data)
 
 if __name__ == "__main__":
     app = HBoxLayoutExample()

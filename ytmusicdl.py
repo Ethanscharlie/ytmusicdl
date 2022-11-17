@@ -35,6 +35,13 @@ VIDEO_FILE_EXT = "mp4"
 AUDIO_FILE_EXT = "mp3"
 DIRECTORY = os.path.dirname(__file__)
 TEMPDIR = os.path.join(DIRECTORY, 'temp')
+REQUESTED_INPUT_DATA =  {
+         'playlist_url': "",
+         'album': "",
+         'artist': "",
+         'cover_art': "",
+         'cutoff': ""
+    }
 
 config_file = open('config.json')
 CONFIG = json.load(config_file)
