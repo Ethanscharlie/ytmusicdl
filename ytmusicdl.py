@@ -142,8 +142,6 @@ def do_metadata(file: str, video_title: str, input_data: dict, index='1'):
 
     # Wipes and then sets each tag to the given input data
     audio.delete()
-    print(f"- - - - - -- - - - - - - -- - {input_data}")
-    print(input_data['cutoff'])
     audio['title'] = f"{video_title[int(input_data['cutoff']):]}"
     audio["album"] = input_data['album']
     audio['artist'] = input_data['artist']
@@ -174,7 +172,6 @@ def do_video(url: str, directory: str, input_data: dict, index='1'):
     global counter
     global percent
 
-    print(f"DOVIDO - - - - - {input_data}")
     file, video_title = download_video(url, directory)
     audio = do_metadata(file, video_title, input_data, index)
 
@@ -234,7 +231,7 @@ def download_playlist(playlist, input_data: dict, download_directory: str):
         " ---- When you don't want to use threading ---- "
         for url in playlist:
             index = str(playlist.index(url) + 1)
-            do_video(url, download_directory, index, input_data)
+            do_video(url, download_directory, input_data, index)
 
 
 def download_song(video_url: str, input_data: dict, download_directory: str):
