@@ -206,14 +206,17 @@ def create_dirs(artist: str, album: str) -> str:
     return os.path.join(CONFIG['download_dir'], artist, album)
 
 
-def autofill_input(input_data: dict) -> dict:
+def autofill_input(input_data: dict, url_type, content) -> dict:
     # Autofill the possibly empty inputs with data taken from the playlist (Like the playlist name and channel name)
     for key, value in input_data.items():
         if value: continue
         if key == 'album':
-            input_data[key] = remove_topic_stuff(playlist.title)
+            input_data[key] = remove_topic_stuff(content.title)
         elif key == 'artist':
-            input_data[key] = remove_topic_stuff(YouTube(playlist[0]).author)
+            if url_type == 'playlist':
+                input_data[key] = remove_topic_stuff(YouTube(content[0]).author)
+            else:
+                input_data[key] = remove_topic_stuff(content.author)
 
     return input_data
 
@@ -256,20 +259,39 @@ def download_content(input_data: dict):
 
     start_time = time.perf_counter()
 
-    playlist = Playlist(input_data['playlist_url'])
+    # Checks if the url given is a Video or a Playlist
+    try:
+        content = YouTube(input_data['playlist_url'])
+    except:
+        try:
+            content = Playlist(input_data['playlist_url'])
+        except:
+            return False, 'Invalid Url'
+        else:
+            url_type = 'playlist'
+    else:
+        url_type = 'video'
 
-    input_data = autofill_input(input_data)
+    print(content)
+    print(url_type)
+    input_data = autofill_input(input_data, url_type, content)
     print(input_data)
 
     # Gets the url for the YouTube thumbnail (if requested) so it can be downloaded later
     if input_data['cover_art'] == 'thumb':
-        input_data['cover_art'] = YouTube(playlist[0]).thumbnail_url
+        if url_type == 'playlist':
+            input_data['cover_art'] = YouTube(content[0]).thumbnail_url
+        else:
+            input_data['cover_art'] = content.thumbnail_url
 
-    # Make Dirs
+            # Make Dirs
     download_directory = create_dirs(input_data['artist'], input_data['album'])
 
     # Do the thing
-    download_playlist(playlist, input_data, download_directory)
+    if url_type == 'playlist':
+        download_playlist(content, input_data, download_directory)
+    else:
+        download_song(input_data['playlist_url'], input_data, download_directory)
 
     end_time = time.perf_counter()
 
