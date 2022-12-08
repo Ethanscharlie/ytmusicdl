@@ -278,9 +278,12 @@ def download_content(input_data: dict):
     print(input_data)
 
     # Gets the url for the YouTube thumbnail (if requested) so it can be downloaded later
-    if input_data['cover_art'] == 'thumb':
+    if input_data['cover_art'] == '':
         if url_type == 'playlist':
-            input_data['cover_art'] = YouTube(content[0]).thumbnail_url
+            try:
+                input_data['cover_art'] = content.initial_data['header']['playlistHeaderRenderer']['playlistHeaderBanner']['heroPlaylistThumbnailRenderer']['thumbnail']['thumbnails'][-1]['url']
+            except:
+                input_data['cover_art'] = YouTube(content[0]).thumbnail_url
         else:
             input_data['cover_art'] = content.thumbnail_url
 
