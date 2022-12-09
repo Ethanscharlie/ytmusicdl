@@ -181,8 +181,8 @@ def do_video(url: str, directory: str, input_data: dict, index='1'):
     print(f"{bcolors.OKBLUE}Finished {audio['title']} | {input_data['album']} | {audio['artist']}{bcolors.ENDC}")
 
     counter += 1
-    percent = (counter / len(playlist)) * 100
-    print(f"{bcolors.OKCYAN}{counter} / {len(playlist)}{bcolors.ENDC}")
+    #percent = (counter / len(playlist)) * 100
+    #print(f"{bcolors.OKCYAN}{counter} / {len(playlist)}{bcolors.ENDC}")
 
 
 def create_dirs(artist: str, album: str) -> str:
