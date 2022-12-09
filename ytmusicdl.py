@@ -242,22 +242,20 @@ def download_song(video_url: str, input_data: dict, download_directory: str):
     do_video(video_url, download_directory, input_data)
 
 
-def download_content(input_data: dict):
+def download_content(url, album='', artist='', cover_art='', cutoff='0'):
     # Downloads a YouTube playlist as an album
-    # {
-    #     'playlist_url': "",
-    #     'album': "",
-    #     'artist': "",
-    #     'cover_art': "",
-    #     'cutoff': ""
-    # }
-    # input_data should be a dictionary and look like this
 
     global counter
     global playlist
     counter = 0
 
     start_time = time.perf_counter()
+
+    input_data = {'playlist_url': url,
+                  'album': album,
+                  'artist': artist,
+                  'cover_art': cover_art,
+                  'cutoff': cutoff}
 
     # Checks if the url given is a Video or a Playlist
     try:
