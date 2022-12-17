@@ -35,13 +35,6 @@ VIDEO_FILE_EXT = "mp4"
 AUDIO_FILE_EXT = "mp3"
 DIRECTORY = os.path.dirname(__file__)
 TEMPDIR = os.path.join(DIRECTORY, 'temp')
-REQUESTED_INPUT_DATA =  {
-         'playlist_url': "",
-         'album': "",
-         'artist': "",
-         'cover_art': "",
-         'cutoff': ""
-    }
 
 config_file = open('config.json')
 CONFIG = json.load(config_file)
@@ -251,6 +244,8 @@ def download_content(url, album='', artist='', cover_art='', cutoff='0'):
 
     start_time = time.perf_counter()
 
+    if not cutoff: cutoff = 0
+
     input_data = {'playlist_url': url,
                   'album': album,
                   'artist': artist,
@@ -259,10 +254,10 @@ def download_content(url, album='', artist='', cover_art='', cutoff='0'):
 
     # Checks if the url given is a Video or a Playlist
     try:
-        content = YouTube(input_data['playlist_url'])
+        content = YouTube(url)
     except:
         try:
-            content = Playlist(input_data['playlist_url'])
+            content = Playlist(url)
         except:
             return False, 'Invalid Url'
         else:
