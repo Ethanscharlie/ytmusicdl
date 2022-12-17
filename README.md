@@ -2,26 +2,18 @@
 
 Takes a youtube playlist and saves it as an album, 
 
-You can use the `main.py` for the graphical version
-<br>
-or just run `download_playlist` from `ytmusicdl.py`
-<br>
-`download_playlist` should be given the following dictionary
+Run the `ytmusicdl.sh` with
 ```
-{
-  'playlist_url': "",
-  'album': "",
-  'artist': "",
-  'cover_art': "",
-  'cutoff': ""
-}  
+-u          Sets the url (required)
+-a          Sets the Album Name
+-r          Sets the Artist Name
+-c          Sets the cover art (Can be a location or url)
+-s          Sets the cutoff (cuts a length of the front of each title) (A number)
 ```
-You can currently leave `album` and `artist` empty to have them autofill with data taken from the youtube playlist
-<br>
-<br>
-`cutoff` Just takes a number of characters away from the title of each song
-Good for something like `Me - My Song`
-You'd probably want to remove `Me - ` from the titles
+EX: 
+```
+./ytmusicdl.sh -u https://music.youtube.com/playlist?list=OLAK5uy_nmDUsWOMoEcz0SsVqUwir0oxu-k1oUyXE -a "A Funny Little thing" -c https://i.ytimg.com/vi/j4U-Yutgvi0/maxresdefault.jpg
+```
 
 Make sure to set the download_dir in config.json
 ```
