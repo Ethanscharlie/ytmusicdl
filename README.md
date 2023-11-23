@@ -1,3 +1,5 @@
+# THIS PROJECT IS NO LONGER IN A WORKING STATE DO TO PYTUBE CHANGES
+
 # <img width=50px height=50px src="https://github.com/Ethanscharlie/ytmusicdl/blob/main/icon.png"> ytmusicdl
 
 Takes a youtube playlist and saves it as an album, 
