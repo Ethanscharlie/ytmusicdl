@@ -191,7 +191,7 @@ def main():
     with concurrent.futures.ThreadPoolExecutor() as executor:
         for i, track in enumerate(album.tracks):
             executor.submit(
-                download_and_assign_metadata_to_track(album_folder, album, track, i)
+                download_and_assign_metadata_to_track, album_folder, album, track, i
             )
 
     download_time = time.time() - download_start_time
