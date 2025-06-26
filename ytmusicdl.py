@@ -1,6 +1,7 @@
 import json
 import os
-import sys
+import shutil
+import requests
 from dataclasses import dataclass
 
 
@@ -18,8 +19,17 @@ class Album:
     tracks: list[Track]
 
 
-def downloadCoverArt(url: str):
-    pass
+def downloadCoverArtToFolder(url: str, folder: str):
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        with open(os.path.join(folder, "cover.jpg"), "wb") as f:
+            f.write(response.content)
+
+        print("Image downloaded successfully as cover.jpg.")
+        return
+
+    raise Exception(f"Failed to download image. Status code: {response.status_code}")
 
 
 def getCoverArtUrlFromUrl(url: str) -> str:
@@ -76,6 +86,17 @@ def getAlbumFromURL(url: str) -> Album:
     return album
 
 
+def prepare_directory(path: str):
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
+
+
+def createDirsFromFolderWithAlbum(folder: str, album: Album):
+    prepare_directory(os.path.join(folder, album.artist))
+    prepare_directory(os.path.join(folder, album.artist, album.album))
+
+
 def main():
     # url = sys.argv[1]
     # folder = sys.argv[2]
@@ -88,7 +109,11 @@ def main():
 
     album = getAlbumFromURL(url)
     cover_art_url = getCoverArtUrlFromUrl(url)
-    print(cover_art_url)
+
+    createDirsFromFolderWithAlbum(folder, album)
+    album_folder = os.path.join(folder, album.artist, album.album)
+
+    downloadCoverArtToFolder(cover_art_url, album_folder)
 
     os.system(f"cd '{current_directory}'")
 
