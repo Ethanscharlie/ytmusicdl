@@ -1,8 +1,23 @@
+#!/usr/bin/env python3
+
+"""
+Written by Ethanscharlie
+https://github.com/Ethanscharlie
+"""
+
 import json
 import os
+import concurrent.futures
 import shutil
 import requests
 from dataclasses import dataclass
+import time
+import sys
+
+import mutagen
+from mutagen.easyid3 import EasyID3
+from mutagen.mp3 import MP3
+from mutagen.id3 import ID3, APIC
 
 
 @dataclass
@@ -93,19 +108,63 @@ def prepare_directory(path: str):
 
 
 def createDirsFromFolderWithAlbum(folder: str, album: Album):
-    prepare_directory(os.path.join(folder, album.artist))
+    if not os.path.exists(os.path.join(folder, album.artist)):
+        os.makedirs(os.path.join(folder, album.artist))
+
     prepare_directory(os.path.join(folder, album.artist, album.album))
 
 
-def main():
-    # url = sys.argv[1]
-    # folder = sys.argv[2]
+def download_and_assign_metadata_to_track(
+    folder: str, album: Album, track: Track, index: int
+):
+    print(f"Name: {track.title}, Url: {track.url}, index: {index}")
 
-    url = r"https://music.youtube.com/playlist?list=OLAK5uy_kUiWJFbgITN_YXTCrVPsH342xN9smXu4U"
-    folder = "/tmp/"
-
+    # Download video
     current_directory = os.getcwd()
     os.system(f"cd '{folder}'")
+
+    command = (
+        f'yt-dlp -x --audio-format mp3 -o "{folder}/{track.title}.%(ext)s" {track.url}'
+    )
+    print(command)
+    os.system(command)
+    os.system(f"cd '{current_directory}'")
+
+    # Assign metadata
+    audio_file = os.path.join(folder, f"{track.title}.mp3")
+    tracknumer = index + 1
+
+    audio = EasyID3(audio_file)
+
+    audio.delete()
+    audio["title"] = track.title
+    audio["album"] = album.album
+    audio["artist"] = album.artist
+    audio["tracknumber"] = str(tracknumer)
+    audio.save()
+
+    # Set Cover art
+    id3audio = MP3(audio_file, ID3=ID3)
+    id3audio_tags: mutagen.id3.ID3 = id3audio.tags
+    id3audio_tags.add(
+        APIC(
+            mime="image/jpeg",
+            type=3,
+            desc="Cover",
+            data=open(os.path.join(folder, "cover.jpg"), "rb").read(),
+        )
+    )
+    id3audio.save()
+
+
+def main():
+    download_start_time = time.time()
+
+    url = sys.argv[1]
+
+    folder = os.path.join(os.path.expanduser("~"), "Music")
+    if len(sys.argv) > 2:
+        folder = sys.argv[2]
 
     album = getAlbumFromURL(url)
     cover_art_url = getCoverArtUrlFromUrl(url)
@@ -115,7 +174,14 @@ def main():
 
     downloadCoverArtToFolder(cover_art_url, album_folder)
 
-    os.system(f"cd '{current_directory}'")
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for i, track in enumerate(album.tracks):
+            executor.submit(
+                download_and_assign_metadata_to_track(album_folder, album, track, i)
+            )
+
+    download_time = time.time() - download_start_time
+    print(f"Download took {download_time:.2f} seconds")
 
 
 if __name__ == "__main__":
