@@ -18,6 +18,31 @@ class Album:
     tracks: list[Track]
 
 
+def downloadCoverArt(url: str):
+    pass
+
+
+def getCoverArtUrlFromUrl(url: str) -> str:
+    art_url = ""
+
+    os.system(f"yt-dlp {url} --write-info-json --flat-playlist")
+
+    filepath = ""
+    for file in os.listdir("."):
+        if not file.endswith(".info.json"):
+            continue
+
+        filepath = file
+
+    with open(filepath, "r") as f:
+        data = json.loads(f.read())
+        cover_art_url = data["thumbnails"][1]["url"]
+        art_url = cover_art_url
+
+    os.remove(filepath)
+    return art_url
+
+
 def getTrackListFromFilestring(filedata: str) -> list[Track]:
     tracks = []
     items = filedata.split("\n")
@@ -34,17 +59,21 @@ def getTrackListFromFilestring(filedata: str) -> list[Track]:
 def getAlbumFromURL(url: str) -> Album:
     os.system(f"yt-dlp {url} --print-json --flat-playlist > albuminfo.json")
 
+    album = None
     with open("albuminfo.json", "r") as f:
         filestring = f.read()
         tracks = getTrackListFromFilestring(filestring)
         first_json = json.loads(filestring.split("\n")[0])
 
-        return Album(
+        album = Album(
             first_json["playlist"].replace("Album - ", ""),
             first_json["channel"],
             2020,
             tracks,
         )
+
+    os.remove("albuminfo.json")
+    return album
 
 
 def main():
@@ -58,7 +87,8 @@ def main():
     os.system(f"cd '{folder}'")
 
     album = getAlbumFromURL(url)
-    print(album.album)
+    cover_art_url = getCoverArtUrlFromUrl(url)
+    print(cover_art_url)
 
     os.system(f"cd '{current_directory}'")
 
