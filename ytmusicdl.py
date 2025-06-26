@@ -34,6 +34,20 @@ class Album:
     tracks: list[Track]
 
 
+def filterChars(text: str) -> str:
+    return (
+        text.replace("\\", "_")
+        .replace("/", "_")
+        .replace(":", "_")
+        .replace("*", "_")
+        .replace("?", "_")
+        .replace('"', "_")
+        .replace("<", "_")
+        .replace(">", "_")
+        .replace("|", "_")
+    )
+
+
 def downloadCoverArtToFolder(url: str, folder: str):
     response = requests.get(url)
 
@@ -76,7 +90,7 @@ def getTrackListFromFilestring(filedata: str) -> list[Track]:
             continue
 
         data = json.loads(item)
-        tracks.append(Track(data["title"], data["url"]))
+        tracks.append(Track(filterChars(data["title"]), data["url"]))
 
     return tracks
 
@@ -91,8 +105,8 @@ def getAlbumFromURL(url: str) -> Album:
         first_json = json.loads(filestring.split("\n")[0])
 
         album = Album(
-            first_json["playlist"].replace("Album - ", ""),
-            first_json["channel"],
+            filterChars(first_json["playlist"].replace("Album - ", "")),
+            filterChars(first_json["channel"]),
             2020,
             tracks,
         )
